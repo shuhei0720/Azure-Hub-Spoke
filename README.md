@@ -23,7 +23,7 @@
 | Azure サブスクリプションへのデプロイ |[![Azure にデプロイ](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#blade/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshuhei0720%2FAzure-Hub-Spoke%2Frefs%2Fheads%2Fmaster%2FARM%2Fmain.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fshuhei0720%2FAzure-Hub-Spoke%2Frefs%2Fheads%2Fmaster%2FuiDefinition.json)|
 
 > :warning: **警告:**
-> **このデプロイは、デモ、テスト、学習、トレーニング、練習、または再現目的でのみ利用してください!!**
+> **このテンプレートは、検証目的でのみ利用してください!!**
 > **本番環境へのデプロイは避けてください!!**
 <br>
 
@@ -33,9 +33,9 @@
 
 ## 概要
 
-このテンプレート は、Azure の Hub & Spoke トポロジーのデモ、テスト、学習、トレーニング、および再現目的で、迅速なデプロイを可能にします。Azure Virtual Machines、Azure Firewalls、Azure Virtual Network Gateways、Azure Bastion Hosts など、Spoke の数を含む全てのコンポーネントがオプションで選択でき、あらゆるシナリオに対応可能です。
+このテンプレート は、Azure の Hub & Spoke トポロジーの検証目的で、迅速なデプロイを可能にします。Azure Virtual Machines、Azure Firewalls、Azure Virtual Network Gateways、Azure Bastion Hosts、Spoke の数を含む全てのモジュールがオプションで選択でき、様々なシナリオに対応可能です。
 
-オプションでデプロイ可能なコンポーネント：
+オプションでデプロイ可能なモジュール：
 
 - **Hub（VNET または vWAN）内の Azure Firewall（標準またはプレミアム）とルートテーブル**
 - **Hub & Spoke トポロジーの Azure Virtual Network Manager (AVNM) とオプションで直接接続されたネットワークグループ**
@@ -51,9 +51,9 @@
 
 ※ デプロイ時に、デプロイする Spoke VNET の数を指定可能です。Hub と Spoke が両方デプロイされる場合、VNET ピアリングが作成されます。AVNM と共にデプロイする場合、VNET ピアリングは AVNM によって管理されます。
 
-※ ハイブリッド接続のシミュレーションとして、オプションで「オンプレミス」VNET をデプロイできます。オンプレミス VNET に Bastion Host、仮想マシン、仮想ネットワークゲートウェイを追加することが可能です。また、Hub が VPN Gateway を持つ場合、サイト間 VPN 接続もデプロイ可能です。
+※ ハイブリッド接続のシミュレーションとして、オプションで「オンプレミス」VNET をデプロイできます。オンプレミス VNET に Bastionホスト、仮想マシン、仮想ネットワークゲートウェイを追加することが可能です。また、Hub が VPN Gateway を持つ場合、サイト間 VPN 接続もデプロイ可能です。
 
-※ Azure Virtual Network Manager は「VNET」Hub & Spoke トポロジーでのみサポートされています。
+※ Azure Virtual Network Manager は Hub & Spoke トポロジーでのみサポートされています。
 
 ## シナリオ
 
@@ -70,7 +70,7 @@ Lab Builder では、4つの**主要な**シナリオをデプロイ可能です
 |-|-|
 |**1. Spokes のみをデプロイ**|- リソースグループ (rg-Spoke)<br>- 仮想ネットワーク (VNET-Spoke)<br>- ネットワーク セキュリティ グループ (NSG-Spoke) を「Default」サブネットにリンク<br>- サブネット (Default)<br>- [オプション] サブネット (AzureBastionSubnet)<br>- [オプション] サブネット (AzureFirewallSubnet)<br>- [オプション] Azure Bastion ホスト (Bastion-Spoke)、パブリック IP を含む<br>- [オプション] 仮想マシン (Windows)<br><br>*Hub にファイアウォールがある場合のみ:*<br>- ルートテーブル (RT-Hub) を「Default」サブネットにリンクし、デフォルトルートを Azure Firewall に設定|
 |**2. Hub または vWAN Hub のみをデプロイ**|- リソースグループ (rg-Hub)<br>- 仮想ネットワーク (VNET-Hub)<br>- [オプション] サブネット (AzureBastionSubnet)<br>- [オプション] サブネット (AzureFirewallSubnet)<br><br>- [オプション] サブネット (GatewaySubnet)<br>- [オプション] Azure Bastion ホスト (Bastion-Hub)、パブリック IP を含む<br>- [オプション] Azure Firewall (AzFw)、パブリック IP を含む<br>- [オプション] Azure Firewall ポリシー (AzFwPolicy)<br>- [オプション] Azure Firewall ポリシー ルール コレクション グループ<br>- [オプション] 仮想ネットワーク ゲートウェイ<br><br>*Hub にファイアウォールがある場合のみ:*<br>- ルートテーブル (RT-Hub) を「Default」サブネットにリンクし、デフォルトルートを Azure Firewall に設定|
-|**3. Hub または vWAN Hub と Spokes をデプロイ**|シナリオ 1 および 2 の内容＋α:<br>- VNET ピアリング|
+|**3. Hub または vWAN Hub と Spokes をデプロイ**|シナリオ 1 、 2 の内容＋α:<br>- VNET ピアリング|
 |**4. Hub または vWAN Hub と Spokes + OnPrem をデプロイ**|シナリオ 1、2、3 の内容＋α:<br>- リソースグループ (rg-OnPrem)<br>- 仮想ネットワーク (VNET-OnPrem)<br>- ネットワーク セキュリティ グループ (NSG-OnPrem) を「Default」サブネットにリンク<br>- サブネット (Default)<br>- [オプション] サブネット (AzureBastionSubnet)<br>- [オプション] サブネット (GatewaySubnet)<br>- [オプション] Azure Bastion ホスト (Bastion-Hub)、パブリック IP を含む<br>- [オプション] Azure 仮想マシン (Windows)<br><br>*Hub にのみ適用:*<br>- [オプション] Hub ゲートウェイへのサイト間 VPN 接続|
 
 ## デプロイに関する注意事項
@@ -243,7 +243,7 @@ Hub を展開する場合、Azure 仮想ネットワーク マネージャー (A
 
 ## Tips
 
-Deploy to Azureボタン作成
+**Deploy to Azureボタン作成**
 
 Bicepコンパイル
 
