@@ -1,0 +1,1012 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json",
+	"view": {
+		"kind": "Form",
+		"properties": {
+			"title": "Hub または Virtual WAN & Spoke 検証用テンプレート",
+			"steps": [
+				{
+					"name": "basics",
+					"label": "基本",
+					"elements": [
+						{
+							"name": "resourceScope",
+							"type": "Microsoft.Common.ResourceScope",
+							"location": {
+								"resourceTypes": []
+							}
+						},
+						{
+							"name": "AddressSpace",
+							"type": "Microsoft.Common.TextBox",
+							"label": "使用するIP アドレス空間",
+							"defaultValue": "172.16.0.0/16",
+							"toolTip": "デプロイされたVNETで使用するIPアドレス空間を入力してください。/16のみ許可されています。デフォルト=172.16.0.0/16",
+							"constraints": {
+								"required": true,
+								"regex": "^(10(?:\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))\\.0\\.0\\/16)|(172\\.(?:1[6-9]|2\\d|3[0-1])\\.0\\.0\\/16)|(192\\.168\\.0\\.0\\/16)",
+								"validationMessage": "入力値は /16 サブネットである必要があります。10.[0-255].0.0/16 または 172.[16-31].0.0/16 または 192.168.0.0/16 の形式で入力してください"
+							},
+							"visible": true
+						}
+					]
+				},
+				{
+					"name": "HubVNET",
+					"label": "Hub VNET",
+					"elements": [
+						{
+							"name": "deployHUB",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Hub のデプロイ",
+							"defaultValue": "はい",
+							"toolTip": "Hub VNET をデプロイします",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": true
+						},
+						{
+							"name": "hubSubSection",
+							"type": "Microsoft.Common.Section",
+							"label": "HUB デプロイ設定：",
+							"elements": [
+								{
+									"type": "Microsoft.Common.SubscriptionSelector",
+									"name": "hubSubscriptionID",
+									"label": "Hub サブスクリプション"
+								}
+							],
+							"visible": "[equals(steps('HubVNET').deployHUB,true)]"
+						},
+						{
+							"name": "VNETorVWAN",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "vWAN または VNET として Hub を設定",
+							"defaultValue": "VNET",
+							"toolTip": "Hub を Virtual または従来の VNET にデプロイしますか？",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "VNET",
+										"value": "VNET"
+									},
+									{
+										"label": "VWAN",
+										"value": "VWAN"
+									}
+								],
+								"required": true
+							},
+							"visible": "[equals(steps('HubVNET').deployHUB,true)]"
+						},
+						{
+							"name": "deployVnetPeeringAVNM",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Azure Virtual Network Manager (AVNM) のデプロイ",
+							"defaultValue": "いいえ",
+							"toolTip": "Azure Virtual Network Manager に VNET ピアリングの管理を委ねます",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').VNETorVWAN,'VNET'))]"
+						},
+						{
+							"name": "hubRgName",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Hub リソースグループ名",
+							"defaultValue": "rg-hub",
+							"toolTip": "使用可能な文字のみを使用してください",
+							"placeholder": "",
+							"multiLine": false,
+							"constraints": {
+								"required": true,
+								"validations": [
+									{
+										"regex": "^[a-zA-Z0-9_\\-\\.]+$",
+										"message": "使用可能な文字はアルファベットと数字、および次の記号です：_ . -"
+									}
+								]
+							},
+							"visible": "[equals(steps('HubVNET').deployHUB,true)]"
+						},
+						{
+							"name": "deployBastionInHub",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Hub に Bastion をデプロイ",
+							"defaultValue": "いいえ",
+							"toolTip": "Hub VNET に Bastion ホストをデプロイします",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').VNETorVWAN,'VNET'))]"
+						},
+						{
+							"name": "bastionInHubSKU",
+							"type": "Microsoft.Common.DropDown",
+							"label": "Azure Bastion SKU",
+							"defaultValue": "Basic",
+							"toolTip": "Azure Bastion SKU: Basic または Standard または Premium",
+							"constraints": {
+								"required": false,
+								"allowedValues": [
+									{
+										"label": "Basic",
+										"value": "Basic"
+									},
+									{
+										"label": "Standard",
+										"value": "Standard"
+									},
+									{
+										"label": "Premium",
+										"value": "Premium"
+									}
+								]
+							},
+							"visible": "[equals(steps('HubVNET').deployBastionInHub,true)]"
+						},
+						{
+							"name": "deployGatewayInHub",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Hub に Virtual Network Gateway をデプロイ",
+							"defaultValue": "いいえ",
+							"toolTip": "Hub VNET に Virtual Network Gateway をデプロイします",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[equals(steps('HubVNET').deployHUB,true)]"
+						},
+						{
+							"name": "hubBgp",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "BGPを有効にする",
+							"defaultValue": "いいえ",
+							"toolTip": "VPNゲートウェイでBGPを有効にする",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').deployGatewayInHub,true))]"
+						},
+						{
+							"name": "hubBgpAsn",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Hub BGP ASN",
+							"defaultValue": "",
+							"toolTip": "許可された文字のみを使用してください。VNET デプロイの場合: Hub のデフォルト BGP ASN = 65010。vWAN デプロイの場合: vWAN Hub のデフォルト BGP = 65515",
+							"placeholder": "[if(equals(steps('HubVNET').VNETorVWAN,'VNET'),65010,65515)]",
+							"multiLine": false,
+							"constraints": {
+								"required": true,
+								"validations": [
+									{
+										"regex": "\\b\\d{5}\\b",
+										"message": "5桁の数字のみ"
+									},
+									{
+										"isValid": "[or(and(equals(steps('HubVNET').hubBgpAsn,'65515'),equals(steps('HubVNET').VNETorVWAN,'VWAN')),and(not(equals(steps('HubVNET').hubBgpAsn,'65515')),equals(steps('HubVNET').VNETorVWAN,'VNET')))]",
+										"message": "許可された文字のみを使用してください。VNET デプロイの場合: Hub のデフォルト BGP ASN = 65010。vWAN デプロイの場合: vWAN Hub のデフォルト BGP = 65515。注意1: Hub BGP と OnPrem BGP は同じであってはなりません。注意2: Azure VPN ゲートウェイ間の Site-to-Site VPN トンネル (VNET のみ) では、Azure のデフォルト BGP ASN 65515 を使用できず、デフォルトで BGP ASN 65010 に設定されます。"
+									}
+								]
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').deployGatewayInHub,true),equals(steps('HubVNET').hubBgp,true))]"
+						},
+						{
+							"name": "deployFirewallInHub",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Hub にファイアウォールをデプロイ",
+							"defaultValue": "いいえ",
+							"toolTip": "Hub VNET に Azure Firewall をデプロイします。Spokes と Hub VNET のカスタムルートテーブルを含みます",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[equals(steps('HubVNET').deployHUB,true)]"
+						},
+						{
+							"name": "AzureFirewallTier",
+							"type": "Microsoft.Common.DropDown",
+							"label": "Azure Firewall Tier",
+							"defaultValue": "Standard",
+							"toolTip": "Azure Firewall Tier: Standard または Premium",
+							"constraints": {
+								"required": false,
+								"allowedValues": [
+									{
+										"label": "Standard",
+										"value": "Standard"
+									},
+									{
+										"label": "Premium",
+										"value": "Premium"
+									}
+								]
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').deployFirewallInHub,true))]"
+						},
+						{
+							"name": "AzureFirewallDNSproxy",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Azure Firewall DNSプロキシを有効にする",
+							"defaultValue": "いいえ",
+							"toolTip": "Azure Firewall DNSプロキシを有効にします",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').deployFirewallInHub,true))]"
+						},
+						{
+							"name": "deployFirewallrules",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "ファイアウォールポリシールールをデプロイ",
+							"defaultValue": "はい",
+							"toolTip": "スパーク間およびインターネットトラフィックを許可するファイアウォールポリシールールコレクショングループをデプロイします",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').deployFirewallInHub,true))]"
+						},
+						{
+							"name": "deployUDRs",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "VM サブネットにルートテーブル (UDR) をデプロイ",
+							"defaultValue": "はい",
+							"toolTip": "VM サブネットにルートテーブル (UDR) をデプロイします",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').VNETorVWAN,'VNET'),equals(steps('HubVNET').deployFirewallInHub,true))]"
+						},
+						{
+							"name": "enableRoutingIntent",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Azure vWAN ルーティングインテントを有効にする",
+							"defaultValue": "いいえ",
+							"toolTip": "インターネットおよび/またはパブリックIPトラフィックをvWAN Hub の Azure Firewall 経由でルーティングするための Azure vWAN ルーティングインテントを有効にします。vWAN Hub に Azure Firewall がデプロイされている必要があります",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "いいえ",
+										"value": false
+									},
+									{
+										"label": "プライベートトラフィックのみ",
+										"value": "private"
+									},
+									{
+										"label": "インターネットトラフィックのみ",
+										"value": "internet"
+									},
+									{
+										"label": "インターネットおよびプライベートトラフィック",
+										"value": "privateAndInternet"
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,true),equals(steps('HubVNET').VNETorVWAN,'VWAN'),equals(steps('HubVNET').deployFirewallInHub,true))]"
+						}
+					]
+				},
+				{ 
+					"name": "SpokeVNETs",
+					"label": "Spoke VNET",
+					"elements": [
+						{
+							"name": "deploySpokes",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Spokeのデプロイ",
+							"defaultValue": "はい",
+							"toolTip": "Spoke VNET をデプロイ",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": true
+						},
+						{
+							"name": "spokeSubSection",
+							"type": "Microsoft.Common.Section",
+							"label": "Spoke デプロイ設定:",
+							"elements": [
+								{
+									"type": "Microsoft.Common.SubscriptionSelector",
+									"name": "spokeSubscriptionID",
+									"label": "Spoke サブスクリプション"
+								}
+							],
+							"visible": "[equals(steps('SpokeVNETs').deploySpokes,true)]"
+						},
+						{
+							"name": "spokeRgNamePrefix",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Spoke リソースグループ接頭辞名",
+							"defaultValue": "rg-spoke",
+							"toolTip": "許可された文字のみを使用",
+							"placeholder": "",
+							"multiLine": false,
+							"constraints": {
+								"required": true,
+								"validations": [
+									{
+										"regex": "^[a-zA-Z0-9_\\-\\.]+$",
+										"message": "英数字および記号（_、.、-）のみが許可されています"
+									}
+								]
+							},
+							"visible": "[equals(steps('SpokeVNETs').deploySpokes,true)]"
+						},
+						{
+							"name": "amountOfSpokes",
+							"type": "Microsoft.Common.Slider",
+							"min": 1,
+							"max": 25,
+							"label": "スポークの数",
+							"sublabel": "# のスポーク",
+							"defaultValue": 2,
+							"showStepMarkers": false,
+							"toolTip": "展開するSpoke VNET の数。デフォルト = 2",
+							"constraints": {
+								"required": false
+							},
+							"visible": "[equals(steps('SpokeVNETs').deploySpokes,true)]"
+						},
+						{
+							"name": "deployVnetPeeringMesh",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "AVNM トポロジーでSpoke VNET を直接接続",
+							"defaultValue": "いいえ",
+							"toolTip": "標準の VNET ピアリングを使用して、Spoke仮想ネットワークを完全にメッシュ接続します。",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[equals(steps('HubVNET').deployVnetPeeringAVNM,true)]"
+						},
+						{
+							"name": "PeeringMeshInfoAVNM",
+							"type": "Microsoft.Common.InfoBox",
+							"options": {
+								"text": "AVNM がHubに展開されます。AVNM の直接接続グループが使用されます。",
+								"style": "Info"
+							},
+							"visible": "[and(equals(steps('SpokeVNETs').deployVnetPeeringMesh,true),equals(steps('HubVNET').deployVnetPeeringAVNM,true))]"
+						}
+					]
+				},
+				{
+					"name": "OnPrem",
+					"label": "オンプレミスのシミュレーション",
+					"elements": [
+						{
+							"name": "deployOnPrem",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "オンプレミスをデプロイ",
+							"defaultValue": "いいえ",
+							"toolTip": "オンプレミスを VNET としてシミュレーション",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": true
+						},
+						{
+							"name": "onPremSubSection",
+							"type": "Microsoft.Common.Section",
+							"label": "オンプレミスデプロイ設定:",
+							"elements": [
+								{
+									"type": "Microsoft.Common.SubscriptionSelector",
+									"name": "onPremSubscriptionID",
+									"label": "オンプレミス サブスクリプション"
+								}
+							],
+							"visible": "[equals(steps('OnPrem').deployOnPrem,true)]"
+						},
+						{
+							"name": "OnPremRgName",
+							"type": "Microsoft.Common.TextBox",
+							"label": "オンプレミス リソースグループ名",
+							"defaultValue": "rg-onprem",
+							"toolTip": "許可された文字のみを使用",
+							"placeholder": "",
+							"multiLine": false,
+							"constraints": {
+								"required": true,
+								"validations": [
+									{
+										"regex": "^[a-zA-Z0-9_\\-\\.]+$",
+										"message": "英数字および記号（_、.、-）のみが許可されています"
+									}
+								]
+							},
+							"visible": "[equals(steps('OnPrem').deployOnPrem,true)]"
+						},
+						{
+							"name": "deployBastionInOnPrem",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "オンプレミスにBastionを展開",
+							"defaultValue": "いいえ",
+							"toolTip": "オンプレミス VNET にBastionホストを展開",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[equals(steps('OnPrem').deployOnPrem,true)]"
+						},
+						{
+							"name": "bastionInOnPremSKU",
+							"type": "Microsoft.Common.DropDown",
+							"label": "Azure Bastion SKU",
+							"defaultValue": "Basic",
+							"toolTip": "Azure Bastion SKU: Basic または Standard",
+							"constraints": {
+								"required": false,
+								"allowedValues": [
+									{
+										"label": "Basic",
+										"value": "Basic"
+									},
+									{
+										"label": "Standard",
+										"value": "Standard"
+									}
+								]
+							},
+							"visible": "[equals(steps('OnPrem').deployBastionInOnPrem,true)]"
+						},
+						{
+							"name": "deployGatewayInOnPrem",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "オンプレミスに仮想ネットワークゲートウェイをデプロイ",
+							"defaultValue": "いいえ",
+							"toolTip": "オンプレミス VNET に仮想ネットワークゲートウェイをデプロイ",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[equals(steps('OnPrem').deployOnPrem,true)]"
+						},
+						{
+							"name": "onpremBgp",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "BGP を有効にする",
+							"defaultValue": "いいえ",
+							"toolTip": "VPN ゲートウェイで BGP を有効にする",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('OnPrem').deployOnPrem,true),equals(steps('OnPrem').deployGatewayInOnPrem,true))]"
+						},
+						{
+							"name": "onpremBgpAsn",
+							"type": "Microsoft.Common.TextBox",
+							"label": "オンプレミス BGP ASN",
+							"defaultValue": "65020",
+							"toolTip": "許可された文字のみを使用",
+							"placeholder": "",
+							"multiLine": false,
+							"constraints": {
+								"required": true,
+								"validations": [
+									{
+										"regex": "\\b\\d{5}\\b",
+										"message": "5 桁の数字のみ"
+									},
+									{
+										"isValid": "[not(equals(steps('HubVNET').hubBgpAsn, steps('OnPrem').onpremBgpAsn))]",
+										"message": "(vWan) ハブとオンプレミス BGP ASN は同じであってはなりません"
+									}
+								]
+							},
+							"visible": "[and(equals(steps('OnPrem').deployOnPrem,true),equals(steps('OnPrem').deployGatewayInOnPrem,true),equals(steps('OnPrem').onpremBgp,true))]"
+						},
+						{
+							"name": "deploySite2Site",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "ハブとオンプレミスゲートウェイ間のサイト間接続を展開",
+							"defaultValue": "いいえ",
+							"toolTip": "ハブとオンプレミスゲートウェイ間のサイト間接続を展開",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[and(equals(steps('OnPrem').deployGatewayInOnPrem,true),equals(steps('OnPrem').deployOnPrem,true))]"
+						},
+						{
+							"name": "sharedKey",
+							"type": "Microsoft.Common.TextBox",
+							"label": "サイト間共有キー（パスワード)",
+							"defaultValue": "",
+							"toolTip": "サイト間で共有するパスワード。許可された文字のみを使用",
+							"placeholder": "",
+							"multiLine": false,
+							"constraints": {
+								"required": true,
+								"validations": []
+							},
+							"visible": "[equals(steps('OnPrem').deploySite2Site,true)]"
+						},
+						{
+							"name": "deploySite2SiteInfo",
+							"type": "Microsoft.Common.InfoBox",
+							"options": {
+								"text": "これにより、Hubに仮想ネットワークゲートウェイの展開も有効になります",
+								"style": "Warning"
+							},
+							"visible": "[equals(steps('OnPrem').deploySite2Site,true)]"
+						}
+					]
+				},
+				{
+					"name": "VirtualMachines",
+					"label": "仮想マシン",
+					"elements": [
+						{
+							"name": "deployVMsInSpokes",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Spokeに VM を展開",
+							"defaultValue": "いいえ",
+							"toolTip": "すべてのSpoke VNET に VM を展開",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[coalesce(steps('SpokeVNETs').deploySpokes,false)]"
+						},
+						{
+							"name": "deployVMinOnPrem",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "オンプレミスに VM を展開",
+							"defaultValue": "いいえ",
+							"toolTip": "オンプレミス VNET に VM を展開",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[coalesce(steps('OnPrem').deployOnPrem,false)]"
+						},
+						{
+							"name": "noVirtualMachines",
+							"type": "Microsoft.Common.InfoBox",
+							"options": {
+								"text": "仮想マシンの展開には、Hub、Spoke、またはオンプレミスのいずれかのデプロイが選択されている必要があります！",
+								"style": "Info"
+							},
+							"visible": "[and(equals(steps('HubVNET').deployHUB,false),equals(steps('SpokeVNETs').deploySpokes,false),equals(steps('OnPrem').deployOnPrem,false))]"
+						},
+						{
+							"name": "VMosTypeInfo",
+							"type": "Microsoft.Common.InfoBox",
+							"options": {
+								"text": "OS タイプ: Windows = Windows Server 2022 Datacenter - Gen2、Linux = Ubuntu Server 22.04 LTS Gen2",
+								"style": "Info"
+							},
+							"visible": "[or(equals(steps('VirtualMachines').deployVMsInSpokes,true),equals(steps('VirtualMachines').deployVMinOnPrem,true))]"
+						},
+						{
+							"name": "deployAMA",
+							"type": "Microsoft.Common.OptionsGroup",
+							"label": "Azure Monitor Agent (AMA) と依存関係エージェント (サービス マップ) を展開",
+							"toolTip": "依存関係エージェントは、Windows VM のみで適用されます",
+							"defaultValue": "いいえ",
+							"constraints": {
+								"allowedValues": [
+									{
+										"label": "はい",
+										"value": true
+									},
+									{
+										"label": "いいえ",
+										"value": false
+									}
+								],
+								"required": true
+							},
+							"visible": "[or(equals(steps('VirtualMachines').deployVMsInSpokes,true),equals(steps('VirtualMachines').deployVMinOnPrem,true))]"
+						},
+						{
+							"name": "lawSelectorForAMA",
+							"type": "Microsoft.Solutions.ResourceSelector",
+							"label": "LogAnalytics ワークスペース",
+							"resourceType": "Microsoft.OperationalInsights/workspaces",
+							"visible": "[equals(steps('VirtualMachines').deployAMA,true)]"
+						},
+						{
+							"name": "SpokevmSizeSection",
+							"type": "Microsoft.Common.Section",
+							"label": "スポーク仮想マシン設定:",
+							"elements": [
+								{
+									"name": "osType",
+									"type": "Microsoft.Common.OptionsGroup",
+									"label": "仮想マシン OS タイプ (Spoke)",
+									"defaultValue": "Windows",
+									"toolTip": "仮想マシン OS タイプ。Windows または Linux。デフォルト = Windows",
+									"constraints": {
+										"allowedValues": [
+											{
+												"label": "Windows",
+												"value": "Windows"
+											},
+											{
+												"label": "Linux",
+												"value": "Linux"
+											}
+										],
+										"required": true
+									},
+									"visible": true
+								},
+								{
+									"name": "LinuxDAInfo",
+									"type": "Microsoft.Common.InfoBox",
+									"options": {
+										"text": "VM 依存関係エージェントは Linux にはインストールされません。",
+										"style": "Warning"
+									},
+									"visible": "[and(equals(steps('VirtualMachines').SpokevmSizeSection.osType,'Linux'),equals(steps('VirtualMachines').deployAMA,true))]"
+								},
+								{
+									"name": "vmSize",
+									"type": "Microsoft.Compute.SizeSelector",
+									"label": "仮想マシン SKU サイズ (Spoke)",
+									"toolTip": "仮想マシン SKU サイズ。デフォルト = Standard_B2s",
+									"recommendedSizes": [
+										"Standard_B2s"
+									],
+									"constraints": {
+										"allowedSizes": []
+									},
+									"options": {
+										"hideDiskTypeFilter": false
+									},
+									"osPlatform": "Windows",
+									"count": "[steps('SpokeVNETs').amountOfSpokes]",
+									"visible": true
+								}
+							],
+							"visible": "[equals(steps('VirtualMachines').deployVMsInSpokes,true)]"
+						},
+						{
+							"name": "OnPremvmSizeSection",
+							"type": "Microsoft.Common.Section",
+							"label": "オンプレミス仮想マシン設定:",
+							"elements": [
+								{
+									"name": "osType",
+									"type": "Microsoft.Common.OptionsGroup",
+									"label": "仮想マシンOSタイプ（オンプレミス）",
+									"defaultValue": "Windows",
+									"toolTip": "仮想マシンのOSタイプ。WindowsまたはLinux。デフォルトはWindows",
+									"constraints": {
+										"allowedValues": [
+											{
+												"label": "Windows",
+												"value": "Windows"
+											},
+											{
+												"label": "Linux",
+												"value": "Linux"
+											}
+										],
+										"required": true
+									},
+									"visible": true
+								},
+								{
+									"name": "vmSize",
+									"type": "Microsoft.Compute.SizeSelector",
+									"label": "仮想マシンSKUサイズ（オンプレミス）",
+									"toolTip": "仮想マシンSKUサイズ。デフォルトはStandard_B2s",
+									"recommendedSizes": [
+										"Standard_B2s"
+									],
+									"constraints": {
+										"allowedSizes": []
+									},
+									"options": {
+										"hideDiskTypeFilter": false
+									},
+									"osPlatform": "Windows",
+									"count": 1,
+									"visible": true
+								}
+							],
+							"visible": "[equals(steps('VirtualMachines').deployVMinOnPrem,true)]"
+						},
+						{
+							"name": "VMUserAccountInfo",
+							"type": "Microsoft.Common.InfoBox",
+							"options": {
+								"text": "仮想マシンのデプロイメントのためのローカル管理者のユーザー名とパスワードを入力してください。",
+								"style": "Info"
+							},
+							"visible": "[or(equals(steps('VirtualMachines').deployVMsInSpokes,true),equals(steps('VirtualMachines').deployVMinOnPrem,true))]"
+						},
+						{
+							"name": "adminUsername",
+							"type": "Microsoft.Compute.UserNameTextBox",
+							"label": "管理者ユーザー名",
+							"toolTip": "",
+							"osPlatform": "Windows",
+							"constraints": {
+								"required": true
+							},
+							"visible": "[or(equals(steps('VirtualMachines').deployVMsInSpokes,true),equals(steps('VirtualMachines').deployVMinOnPrem,true))]"
+						},
+						{
+							"name": "adminPassword",
+							"type": "Microsoft.Compute.CredentialsCombo",
+							"label": {
+								"password": "管理者パスワード",
+								"confirmPassword": "パスワード確認"
+							},
+							"toolTip": {
+								"password": ""
+							},
+							"osPlatform": "Windows",
+							"constraints": {
+								"required": true
+							},
+							"options": {
+								"hideConfirmation": false
+							},
+							"visible": "[or(equals(steps('VirtualMachines').deployVMsInSpokes,true),equals(steps('VirtualMachines').deployVMinOnPrem,true))]"
+						}
+					]
+				},
+				{
+					"name": "tags",
+					"label": "タグ",
+					"elements": [
+						{
+							"name": "tagsByResource",
+							"type": "Microsoft.Common.TagsByResource",
+							"resources": [
+								"Microsoft.Compute/virtualMachines",
+								"Microsoft.Network/networkSecurityGroups",
+								"Microsoft.Network/virtualNetworks",
+								"Microsoft.Network/bastionHosts",
+								"Microsoft.Network/azureFirewalls",
+								"Microsoft.Network/firewallPolicies",
+								"Microsoft.Network/routeTables",
+								"Microsoft.Network/virtualNetworkGateways",
+								"Microsoft.Network/publicIPAddresses",
+								"Microsoft.Network/localNetworkGateways",
+								"Microsoft.Network/connections",
+								"Microsoft.Network/virtualWans",
+								"Microsoft.Resources/subscriptions/resourceGroups",
+								"Microsoft.Insights/dataCollectionRules",
+								"Microsoft.Network/networkManagers",
+								"Microsoft.Resources/deploymentScripts",
+								"Microsoft.ManagedIdentity/userAssignedIdentities"
+							]
+						}
+					]
+				}
+			]
+		},
+		"outputs": {
+			"parameters": {
+				"AddressSpace": "[steps('basics').AddressSpace]",
+				"tagsByResource": "[steps('tags').tagsByResource]",
+				"adminUsername": "[coalesce(steps('VirtualMachines').adminUsername,'')]",
+				"adminPassword": "[coalesce(steps('VirtualMachines').adminPassword.password,'')]",
+				"deployVMsInSpokes": "[coalesce(steps('VirtualMachines').deployVMsInSpokes,false)]",
+				"deployVMinOnPrem": "[coalesce(steps('VirtualMachines').deployVMinOnPrem,false)]",
+				"deploySpokes": "[coalesce(steps('SpokeVNETs').deploySpokes,false)]",
+				"amountOfSpokes": "[steps('SpokeVNETs').amountOfSpokes]",
+				"deployVnetPeeringMesh": "[coalesce(steps('SpokeVNETs').deployVnetPeeringMesh,false)]",
+				"deployHUB": "[coalesce(steps('HubVNET').deployHUB,false)]",
+				"hubType": "[steps('HubVNET').VNETorVWAN]",
+				"deployVnetPeeringAVNM": "[steps('HubVNET').deployVnetPeeringAVNM]",
+				"hubRgName": "[steps('HubVNET').hubRgName]",
+				"deployBastionInHub": "[coalesce(steps('HubVNET').deployBastionInHub,false)]",
+				"deployGatewayInHub": "[or(steps('HubVNET').deployGatewayInHub,steps('OnPrem').deploySite2Site)]",
+				"hubBgp": "[coalesce(steps('HubVNET').hubBgp,false)]",
+				"hubBgpAsn": "[steps('HubVNET').hubBgpAsn]",
+				"deployFirewallInHub": "[coalesce(steps('HubVNET').deployFirewallInHub,false)]",
+				"AzureFirewallTier": "[steps('HubVNET').AzureFirewallTier]",
+				"deployUDRs": "[steps('HubVNET').deployUDRs]",
+				"spokeRgNamePrefix": "[steps('SpokeVNETs').spokeRgNamePrefix]",
+				"deployFirewallrules": "[coalesce(steps('HubVNET').deployFirewallrules,false)]",
+				"firewallDNSproxy": "[coalesce(steps('HubVNET').AzureFirewallDNSproxy,false)]",
+				"deployOnPrem": "[coalesce(steps('OnPrem').deployOnPrem,false)]",
+				"onpremRgName": "[steps('OnPrem').OnPremRgName]",
+				"deployBastionInOnPrem": "[coalesce(steps('OnPrem').deployBastionInOnPrem,false)]",
+				"deployGatewayinOnPrem": "[coalesce(steps('OnPrem').deployGatewayInOnPrem,false)]",
+				"onpremBgp": "[coalesce(steps('OnPrem').onpremBgp,false)]",
+				"onpremBgpAsn": "[steps('OnPrem').onpremBgpAsn]",
+				"deploySiteToSite": "[coalesce(steps('OnPrem').deploySite2Site,false)]",
+				"sharedKey": "[steps('OnPrem').sharedKey]",
+				"hubSubscriptionID": "[steps('HubVNET').hubSubSection.hubSubscriptionID.subscriptionId]",
+				"spokeSubscriptionID": "[steps('SpokeVNETs').spokeSubSection.spokeSubscriptionID.subscriptionId]",
+				"onPremSubscriptionID": "[steps('OnPrem').onPremSubSection.onPremSubscriptionID.subscriptionId]",
+				"bastionInHubSKU": "[steps('HubVNET').bastionInHubSKU]",
+				"bastionInOnPremSKU": "[steps('OnPrem').bastionInOnPremSKU]",
+				"vmSizeSpoke": "[steps('VirtualMachines').SpokevmSizeSection.vmSize]",
+				"vmSizeOnPrem": "[steps('VirtualMachines').OnPremvmSizeSection.vmSize]",
+				"osTypeSpoke": "[steps('VirtualMachines').SpokevmSizeSection.osType]",
+				"osTypeOnPrem": "[steps('VirtualMachines').OnPremvmSizeSection.osType]",
+				"diagnosticWorkspaceId": "[steps('VirtualMachines').lawSelectorForAMA.id]",
+				"internetTrafficRoutingPolicy": "[or(equals(steps('HubVNET').enableRoutingIntent,'internet'),equals(steps('HubVNET').enableRoutingIntent,'privateAndInternet'))]",
+				"privateTrafficRoutingPolicy": "[or(equals(steps('HubVNET').enableRoutingIntent,'private'),equals(steps('HubVNET').enableRoutingIntent,'privateAndInternet'))]"
+			},
+			"kind": "Subscription",
+			"subscriptionId": "[steps('basics').resourceScope.subscription.id]",
+			"location": "[steps('basics').resourceScope.location.name]"
+		}
+	}
+}
