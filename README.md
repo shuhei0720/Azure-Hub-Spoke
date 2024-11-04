@@ -5,17 +5,16 @@
 1. [目次](#概要)
 2. [Azure へのデプロイ](#azure-へのデプロイ)
 3. [概要](#概要)
-4. [シナリオ](#シナリオ)
-   1. [トポロジー図 - Hub & Spoke](#トポロジー図---hub--spoke)
-   2. [トポロジー図 - Azure Virtual WAN](#トポロジー図---azure-virtual-wan)
-5. [デプロイに関する注意事項](#デプロイに関する注意事項)
+4. [構成図例](#構成図例---hub--spoke)
+5. [シナリオ](#シナリオ)
+6. [デプロイに関する注意事項](#デプロイに関する注意事項)
    1. [一般](#一般)
    2. [サブネット IP アドレス範囲の使用](#サブネット-ip-アドレス範囲の使用)
    3. [リソース名](#リソース名)
-6. [Azure Monitor エージェント、VM Insights、Dependency エージェント](#azure-monitor-エージェントvm-insights-および-dependency-エージェント)
-7. [Azure 仮想ネットワーク マネージャー](#azure-仮想ネットワーク-マネージャー)
-8. [パラメーターの概要](#パラメーターの概要)
-9. [展開後のガイダンス](#展開後のガイダンス)
+7. [Azure Monitor エージェント、VM Insights、Dependency エージェント](#azure-monitor-エージェントvm-insights-および-dependency-エージェント)
+8. [Azure 仮想ネットワーク マネージャー](#azure-仮想ネットワーク-マネージャー)
+9. [パラメーターの概要](#パラメーターの概要)
+10. [展開後のガイダンス](#展開後のガイダンス)
 
 ## Azure へのデプロイ
 
@@ -51,6 +50,10 @@
 
 ※ Azure Virtual Network Manager は「VNET」Hub & Spoke トポロジーでのみサポートされています。
 
+## 構成図例 - Hub & Spoke
+
+![LabBuilderTopology](images/HubSpoke構成図.png)
+
 ## シナリオ
 
 Lab Builder では、4つの**主要な**シナリオをデプロイ可能です。
@@ -68,14 +71,6 @@ Lab Builder では、4つの**主要な**シナリオをデプロイ可能です
 |**2. Hub または vWAN Hub のみをデプロイ**|- リソースグループ (rg-Hub)<br>- 仮想ネットワーク (VNET-Hub)<br>- [オプション] サブネット (AzureBastionSubnet)<br>- [オプション] サブネット (AzureFirewallSubnet)<br><br>- [オプション] サブネット (GatewaySubnet)<br>- [オプション] Azure Bastion ホスト (Bastion-Hub)、パブリック IP を含む<br>- [オプション] Azure Firewall (AzFw)、パブリック IP を含む<br>- [オプション] Azure Firewall ポリシー (AzFwPolicy)<br>- [オプション] Azure Firewall ポリシー ルール コレクション グループ<br>- [オプション] 仮想ネットワーク ゲートウェイ<br><br>*Hub にファイアウォールがある場合のみ:*<br>- ルートテーブル (RT-Hub) を「Default」サブネットにリンクし、デフォルトルートを Azure Firewall に設定|
 |**3. Hub または vWAN Hub と Spokes をデプロイ**|シナリオ 1 および 2 の内容＋α:<br>- VNET ピアリング|
 |**4. Hub または vWAN Hub と Spokes + OnPrem をデプロイ**|シナリオ 1、2、3 の内容＋α:<br>- リソースグループ (rg-OnPrem)<br>- 仮想ネットワーク (VNET-OnPrem)<br>- ネットワーク セキュリティ グループ (NSG-OnPrem) を「Default」サブネットにリンク<br>- サブネット (Default)<br>- [オプション] サブネット (AzureBastionSubnet)<br>- [オプション] サブネット (GatewaySubnet)<br>- [オプション] Azure Bastion ホスト (Bastion-Hub)、パブリック IP を含む<br>- [オプション] Azure 仮想マシン (Windows)<br><br>*Hub にのみ適用:*<br>- [オプション] Hub ゲートウェイへのサイト間 VPN 接続|
-
-### 構成図 - Hub & Spoke
-
-![LabBuilderTopology](images/LabBuilder.svg)
-
-### 構成図 - Azure Virtual WAN
-
-![LabBuilderTopology-vWAN](/images/LabBuilder-vWAN.svg)
 
 ## デプロイに関する注意事項
 
